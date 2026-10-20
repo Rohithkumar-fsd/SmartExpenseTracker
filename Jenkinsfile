@@ -27,26 +27,20 @@ pipeline {
             steps {
                 echo 'Deploying application locally on EC2 host...'
                 sh '''
-                    # Ensure application directory exists
                     mkdir -p /home/ubuntu/expense-tracker
-
-                    # Copy built artifact
                     cp target/smart-expense-tracker-1.0.0.jar /home/ubuntu/expense-tracker/smart-expense-tracker-1.0.0.jar
 
-                    # Kill any existing app instance running on port 8081
                     fuser -k 8081/tcp || true
                     pkill -f smart-expense-tracker-1.0.0.jar || true
 
-                    # Prevent Jenkins ProcessTreeKiller from killing background Java process
-                    # Launch background app and log output to app.log
                     JENKINS_NODE_COOKIE=dontKillMe nohup java -jar /home/ubuntu/expense-tracker/smart-expense-tracker-1.0.0.jar \
-                      --server.port=8081 \
-                      --spring.datasource.url="$DB_URL" \
-                      --spring.datasource.username="$DB_USER" \
-                      --spring.datasource.password="$DB_PASS" \
-                      --spring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect \
-                      --telegram.bot.username="$TELEGRAM_BOT_USER" \
-                      --telegram.bot.token="$TELEGRAM_BOT_TOKEN" > /home/ubuntu/expense-tracker/app.log 2>&1 &
+                    --server.port=8081 \
+                    --spring.datasource.url="$DB_URL" \
+                    --spring.datasource.username="$DB_USER" \
+                    --spring.datasource.password="$DB_PASS" \
+                    --spring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect \
+                    --telegram.bot.username="$TELEGRAM_BOT_USER" \
+                    --telegram.bot.token="$TELEGRAM_BOT_TOKEN" > /home/ubuntu/expense-tracker/app.log 2>&1 &
                 '''
             }
         }
