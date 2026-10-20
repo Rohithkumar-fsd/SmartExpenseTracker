@@ -2,17 +2,11 @@ pipeline {
     agent any
 
     environment {
-        // Application Port (using 8081 so it doesn't conflict with Jenkins on 8080)
-        APP_PORT            = '8081'
-        DEPLOY_DIR          = '/home/ubuntu/expense-tracker'
-        JAR_NAME            = 'smart-expense-tracker-1.0.0.jar'
-
-        // Credentials pulled securely from Jenkins Credential Store
-        DB_URL              = credentials('EXPENSE_DB_URL')
-        DB_USER             = credentials('EXPENSE_DB_USER')
-        DB_PASS             = credentials('EXPENSE_DB_PASS')
-        TELEGRAM_BOT_USER   = credentials('TELEGRAM_BOT_USERNAME')
-        TELEGRAM_BOT_TOKEN  = credentials('TELEGRAM_BOT_TOKEN')
+        DB_URL            = credentials('EXPENSE_DB_URL')
+        DB_USER           = credentials('EXPENSE_DB_USER')
+        DB_PASS           = credentials('EXPENSE_DB_PASS')
+        TELEGRAM_BOT_USER = credentials('TELEGRAM_BOT_USERNAME')
+        TELEGRAM_BOT_TOKEN= credentials('TELEGRAM_BOT_TOKEN')
     }
 
     stages {
@@ -25,7 +19,6 @@ pipeline {
         stage('Build & Package JAR') {
             steps {
                 echo 'Building Spring Boot JAR with Maven...'
-                // Using 'sh' because your Jenkins master runs on Linux/EC2
                 sh 'mvn clean package -DskipTests'
             }
         }
@@ -33,46 +26,51 @@ pipeline {
         stage('Deploy Application') {
             steps {
                 echo 'Deploying application locally on EC2 host...'
-                sh """
-                    # 1. Ensure deployment directory exists
-                    mkdir -p ${DEPLOY_DIR}
+                sh '''
+                    # Ensure application directory exists
+                    mkdir -p /home/ubuntu/expense-tracker
 
-                    # 2. Copy compiled JAR to deployment directory
-                    cp target/*.jar ${DEPLOY_DIR}/${JAR_NAME}
+                    # Copy built artifact
+                    cp target/smart-expense-tracker-1.0.0.jar /home/ubuntu/expense-tracker/smart-expense-tracker-1.0.0.jar
 
-                    # 3. Stop any previously running process on port ${APP_PORT}
-                    fuser -k ${APP_PORT}/tcp || pkill -f '${JAR_NAME}' || true
+                    # Kill any existing app instance running on port 8081
+                    fuser -k 8081/tcp || true
+                    pkill -f smart-expense-tracker-1.0.0.jar || true
 
-                    # 4. Launch updated application in background with environment variables
-                    nohup java -jar ${DEPLOY_DIR}/${JAR_NAME} \
-                      --server.port=${APP_PORT} \
-                      --spring.datasource.url='${DB_URL}' \
-                      --spring.datasource.username='${DB_USER}' \
-                      --spring.datasource.password='${DB_PASS}' \
-                      --telegram.bot.username='${TELEGRAM_BOT_USER}' \
-                      --telegram.bot.token='${TELEGRAM_BOT_TOKEN}' \
-                      > ${DEPLOY_DIR}/app.log 2>&1 &
-                """
+                    # Prevent Jenkins ProcessTreeKiller from killing background Java process
+                    # Launch background app and log output to app.log
+                    JENKINS_NODE_COOKIE=dontKillMe nohup java -jar /home/ubuntu/expense-tracker/smart-expense-tracker-1.0.0.jar \
+                      --server.port=8081 \
+                      --spring.datasource.url="$DB_URL" \
+                      --spring.datasource.username="$DB_USER" \
+                      --spring.datasource.password="$DB_PASS" \
+                      --spring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect \
+                      --telegram.bot.username="$TELEGRAM_BOT_USER" \
+                      --telegram.bot.token="$TELEGRAM_BOT_TOKEN" > /home/ubuntu/expense-tracker/app.log 2>&1 &
+                '''
             }
         }
 
         stage('Health Check') {
             steps {
                 echo 'Verifying application health...'
-                sh """
+                sh '''
+                    # Give Spring Boot 15 seconds to finish starting up
                     sleep 15
-                    curl -f http://localhost:${APP_PORT}/actuator/health || curl -f http://localhost:${APP_PORT}/ || exit 1
-                """
+
+                    # Ping Actuator health endpoint or root application route
+                    curl -f http://localhost:8081/actuator/health || curl -f http://localhost:8081/
+                '''
             }
         }
     }
 
     post {
         success {
-            echo "Smart Expense Tracker successfully deployed on port ${APP_PORT}!"
+            echo 'Deployment successful! Application is live on port 8081.'
         }
         failure {
-            echo "Deployment failed. Check application logs at ${DEPLOY_DIR}/app.log"
+            echo 'Deployment failed. Check application logs at /home/ubuntu/expense-tracker/app.log'
         }
     }
 }
