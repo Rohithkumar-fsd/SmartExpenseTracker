@@ -5,19 +5,29 @@ server.port=${PORT:8080}
 # ===================================================================
 # DATABASE CONFIGURATION
 # ===================================================================
-spring.datasource.url=${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/expensedb}
-spring.datasource.username=${SPRING_DATASOURCE_USERNAME:postgres}
-spring.datasource.password=${SPRING_DATASOURCE_PASSWORD:your_password_here}
+spring.datasource.url=${SPRING_DATASOURCE_URL:jdbc:postgresql://ep-curly-sky-b4esl1fo-pooler.c-6.us-east-2.aws.neon.tech/neondb?sslmode=require}
+spring.datasource.username=${SPRING_DATASOURCE_USERNAME:neondb_owner}
+spring.datasource.password=${SPRING_DATASOURCE_PASSWORD:npg_kw3EjlnIy5bi}
 spring.datasource.driver-class-name=org.postgresql.Driver
 
 # JPA / Hibernate
+spring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect
 spring.jpa.hibernate.ddl-auto=update
 spring.jpa.show-sql=false
 spring.jpa.open-in-view=false
 
+# HikariCP Connection Pool
+spring.datasource.hikari.connection-timeout=15000
+spring.datasource.hikari.maximum-pool-size=10
+spring.datasource.hikari.minimum-idle=2
+spring.datasource.hikari.max-lifetime=180000
+spring.datasource.hikari.keepalive-time=30000
+spring.datasource.hikari.idle-timeout=60000
+spring.datasource.hikari.connection-test-query=SELECT 1
+
 # ===================================================================
 # TELEGRAM BOT CONFIGURATION
 # ===================================================================
-telegram.bot.username=${TELEGRAM_BOT_USERNAME:your_bot_username}
-telegram.bot.token=${TELEGRAM_BOT_TOKEN:your_bot_token_here}
+telegram.bot.username=${TELEGRAM_BOT_USERNAME:${TELEGRAM_BOT_USER:rohith_spend_bot}}
+telegram.bot.token=${TELEGRAM_BOT_TOKEN:8382524042:AAHx4YE2Qxg-q8gtNhSgUjegLc0OfTd4Yqk}
 telegram.bot.enabled=true

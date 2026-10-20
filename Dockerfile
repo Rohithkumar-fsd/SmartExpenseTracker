@@ -3,6 +3,10 @@ FROM maven:3.9.6-eclipse-temurin-21 AS build
 WORKDIR /app
 COPY pom.xml .
 COPY src ./src
+# Fallback if application.properties was gitignored for security
+RUN if [ ! -f src/main/resources/application.properties ] && [ -f src/main/resources/application.properties.example ]; then \
+      cp src/main/resources/application.properties.example src/main/resources/application.properties; \
+    fi
 RUN mvn clean package -DskipTests -Dmaven.test.skip=true
 
 # Runtime Stage
