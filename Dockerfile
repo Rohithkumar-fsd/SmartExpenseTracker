@@ -1,24 +1,17 @@
-# Multi-stage build for lightweight production Docker image
-FROM maven:3.9.6-eclipse-temurin-17 AS builder
+# Build Stage
+FROM maven:3.9.6-eclipse-temurin-21 AS build
 WORKDIR /app
 COPY pom.xml .
-RUN mvn dependency:go-offline -B
 COPY src ./src
-# Fallback if application.properties was gitignored for security
-RUN if [ ! -f src/main/resources/application.properties ] && [ -f src/main/resources/application.properties.example ]; then \
-      cp src/main/resources/application.properties.example src/main/resources/application.properties; \
-    fi
-RUN mvn clean package -DskipTests
+RUN mvn clean package -DskipTests -Dmaven.test.skip=true
 
-# Runtime stage
-FROM eclipse-temurin:17-jre-jammy
+# Runtime Stage
+FROM eclipse-temurin:21-jre
 WORKDIR /app
-COPY --from=builder /app/target/*.jar app.jar
+COPY --from=build /app/target/*.jar app.jar
+
+# JVM Heap Memory Safeguard for 512MB RAM Containers
+ENV JAVA_OPTS="-Xms256m -Xmx384m"
 
 EXPOSE 8080
-
-# Environment variables with sensible defaults
-ENV PORT=8080
-ENV SPRING_PROFILES_ACTIVE=prod
-
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
