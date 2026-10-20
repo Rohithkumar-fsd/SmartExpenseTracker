@@ -10,7 +10,7 @@ pipeline {
     }
 
     stages {
-        stage('Checkout Code') {
+        stage('Clean & Checkout') {
             steps {
                 cleanWs()
                 checkout scm
@@ -31,17 +31,19 @@ pipeline {
                     mkdir -p /home/ubuntu/expense-tracker
                     cp target/smart-expense-tracker-1.0.0.jar /home/ubuntu/expense-tracker/smart-expense-tracker-1.0.0.jar
 
+                    # Kill any old running instance on port 8081
                     fuser -k 8081/tcp || true
                     pkill -f smart-expense-tracker-1.0.0.jar || true
 
+                    # Launch application safely in background
                     JENKINS_NODE_COOKIE=dontKillMe nohup java -jar /home/ubuntu/expense-tracker/smart-expense-tracker-1.0.0.jar \
-                    --server.port=8081 \
-                    --spring.datasource.url="$DB_URL" \
-                    --spring.datasource.username="$DB_USER" \
-                    --spring.datasource.password="$DB_PASS" \
-                    --spring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect \
-                    --telegram.bot.username="$TELEGRAM_BOT_USER" \
-                    --telegram.bot.token="$TELEGRAM_BOT_TOKEN" > /home/ubuntu/expense-tracker/app.log 2>&1 &
+                      --server.port=8081 \
+                      --spring.datasource.url="$DB_URL" \
+                      --spring.datasource.username="$DB_USER" \
+                      --spring.datasource.password="$DB_PASS" \
+                      --spring.jpa.hibernate.ddl-auto=update \
+                      --telegram.bot.username="$TELEGRAM_BOT_USER" \
+                      --telegram.bot.token="$TELEGRAM_BOT_TOKEN" > /home/ubuntu/expense-tracker/app.log 2>&1 &
                 '''
             }
         }
@@ -50,10 +52,10 @@ pipeline {
             steps {
                 echo 'Verifying application health...'
                 sh '''
-                    # Give Spring Boot 15 seconds to finish starting up
+                    # Allow 15 seconds for startup
                     sleep 15
 
-                    # Ping Actuator health endpoint or root application route
+                    # Check health status
                     curl -f http://localhost:8081/actuator/health || curl -f http://localhost:8081/
                 '''
             }
