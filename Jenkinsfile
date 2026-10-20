@@ -30,11 +30,9 @@ pipeline {
                     mkdir -p /home/ubuntu/expense-tracker
                     cp target/smart-expense-tracker-1.0.0.jar /home/ubuntu/expense-tracker/smart-expense-tracker-1.0.0.jar
 
-                    # Kill any existing instance on port 8081
                     fuser -k 8081/tcp || true
                     pkill -f smart-expense-tracker-1.0.0.jar || true
 
-                    # Launch background app, detach completely, and log output
                     JENKINS_NODE_COOKIE=dontKillMe nohup java -jar /home/ubuntu/expense-tracker/smart-expense-tracker-1.0.0.jar \
                     --server.port=8081 \
                     --spring.datasource.url="$DB_URL" \
