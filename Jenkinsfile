@@ -12,6 +12,7 @@ pipeline {
     stages {
         stage('Checkout Code') {
             steps {
+                cleanWs()
                 checkout scm
             }
         }
