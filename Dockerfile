@@ -4,6 +4,10 @@ WORKDIR /app
 COPY pom.xml .
 RUN mvn dependency:go-offline -B
 COPY src ./src
+# Fallback if application.properties was gitignored for security
+RUN if [ ! -f src/main/resources/application.properties ] && [ -f src/main/resources/application.properties.example ]; then \
+      cp src/main/resources/application.properties.example src/main/resources/application.properties; \
+    fi
 RUN mvn clean package -DskipTests
 
 # Runtime stage

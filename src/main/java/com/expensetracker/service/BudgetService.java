@@ -26,6 +26,18 @@ public class BudgetService {
         this.expenseRepository = expenseRepository;
     }
 
+    private List<Category> cachedCategories = null;
+    private long lastCategoryFetchTime = 0;
+
+    private synchronized List<Category> getAllCategoriesCached() {
+        long now = System.currentTimeMillis();
+        if (cachedCategories == null || (now - lastCategoryFetchTime > 60000)) {
+            cachedCategories = categoryRepository.findAll();
+            lastCategoryFetchTime = now;
+        }
+        return cachedCategories;
+    }
+
     public static class CategoryBudgetStatus {
         private String categoryName;
         private String icon;
@@ -99,6 +111,7 @@ public class BudgetService {
     }
 
     public DashboardSummary getDashboardSummary(UserProfile user, LocalDate date) {
+        long t0 = System.currentTimeMillis();
         LocalDate startOfMonth = date.withDayOfMonth(1);
         LocalDate endOfMonth = date.withDayOfMonth(date.lengthOfMonth());
         int currentDay = Math.max(1, date.getDayOfMonth());
@@ -106,25 +119,33 @@ public class BudgetService {
         int daysRemaining = Math.max(1, totalDays - currentDay + 1);
         String currency = user != null && user.getCurrency() != null ? user.getCurrency() : "₹";
 
+        long tBudgets0 = System.currentTimeMillis();
         List<Budget> budgets = user != null ?
                 budgetRepository.findByUserProfileAndMonthAndYear(user, date.getMonthValue(), date.getYear()) :
                 Collections.emptyList();
+        long tBudgets1 = System.currentTimeMillis();
 
+        Map<Long, Double> categoryLimitMap = new HashMap<>();
         double totalBudget = 0.0;
         for (Budget b : budgets) {
             totalBudget += b.getMonthlyLimit();
+            if (b.getCategory() != null) {
+                categoryLimitMap.put(b.getCategory().getId(), b.getMonthlyLimit());
+            }
         }
 
+        long tSpent0 = System.currentTimeMillis();
         Double totalSpent = user != null ?
                 expenseRepository.sumAmountByUserProfileAndDateBetween(user, startOfMonth, endOfMonth) : 0.0;
         if (totalSpent == null) totalSpent = 0.0;
+        long tSpent1 = System.currentTimeMillis();
 
+        long tIncome0 = System.currentTimeMillis();
         Double totalIncome = user != null ?
                 expenseRepository.sumIncomeByUserProfileAndDateBetween(user, startOfMonth, endOfMonth) : 0.0;
         if (totalIncome == null) totalIncome = 0.0;
+        long tIncome1 = System.currentTimeMillis();
 
-        // If the user has income but has not configured explicit budget limits,
-        // their effective budget is their total income, or totalBudget + totalIncome if both exist
         double effectiveBudget = totalBudget;
         if (effectiveBudget == 0.0 && totalIncome > 0.0) {
             effectiveBudget = totalIncome;
@@ -133,18 +154,32 @@ public class BudgetService {
         double remainingBudget = Math.max(0, effectiveBudget - totalSpent);
         double safeToSpendToday = remainingBudget / daysRemaining;
 
+        long tGrouped0 = System.currentTimeMillis();
+        Map<Long, Double> categorySpentMap = new HashMap<>();
+        if (user != null) {
+            List<Object[]> spentRows = expenseRepository.sumAmountByUserProfileGroupedByCategoryAndDateBetween(user, startOfMonth, endOfMonth);
+            if (spentRows != null) {
+                for (Object[] row : spentRows) {
+                    if (row != null && row.length >= 2 && row[0] != null) {
+                        Long catId = ((Number) row[0]).longValue();
+                        Double sum = row[1] != null ? ((Number) row[1]).doubleValue() : 0.0;
+                        categorySpentMap.put(catId, sum);
+                    }
+                }
+            }
+        }
+        long tGrouped1 = System.currentTimeMillis();
+
+        long tCat0 = System.currentTimeMillis();
         List<CategoryBudgetStatus> categoryStatuses = new ArrayList<>();
-        List<Category> allCategories = categoryRepository.findAll();
+        List<Category> allCategories = getAllCategoriesCached();
+        long tCat1 = System.currentTimeMillis();
 
         for (Category cat : allCategories) {
-            Optional<Budget> bOpt = user != null ?
-                    budgetRepository.findByCategoryAndUserProfileAndMonthAndYear(cat, user, date.getMonthValue(), date.getYear()) :
-                    Optional.empty();
-            double limit = bOpt.map(Budget::getMonthlyLimit).orElse(0.0);
-            Double spent = user != null ?
-                    expenseRepository.sumAmountByUserProfileAndCategoryAndDateBetween(user, cat, startOfMonth, endOfMonth) : 0.0;
+            double limit = categoryLimitMap.getOrDefault(cat.getId(), 0.0);
+            double spent = categorySpentMap.getOrDefault(cat.getId(), 0.0);
             categoryStatuses.add(new CategoryBudgetStatus(
-                    cat.getName(), cat.getIcon(), cat.getColorHex(), limit, spent != null ? spent : 0.0));
+                    cat.getName(), cat.getIcon(), cat.getColorHex(), limit, spent));
         }
 
         return new DashboardSummary(effectiveBudget, totalSpent, totalIncome, safeToSpendToday, daysRemaining, currency, categoryStatuses);

@@ -16,6 +16,7 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long> {
 
     List<Expense> findByUserProfileOrderByDateDescCreatedAtDesc(UserProfile userProfile);
 
+    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = {"category"})
     List<Expense> findTop15ByUserProfileOrderByDateDescCreatedAtDesc(UserProfile userProfile);
 
     List<Expense> findByUserProfileAndCategoryAndDateBetween(UserProfile userProfile, Category category, LocalDate startDate, LocalDate endDate);
@@ -28,4 +29,7 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long> {
 
     @Query("SELECT COALESCE(SUM(e.amount), 0.0) FROM Expense e WHERE e.userProfile = :userProfile AND e.type = 'INCOME' AND e.date BETWEEN :startDate AND :endDate")
     Double sumIncomeByUserProfileAndDateBetween(@Param("userProfile") UserProfile userProfile, @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+
+    @Query("SELECT e.category.id, COALESCE(SUM(e.amount), 0.0) FROM Expense e WHERE e.userProfile = :userProfile AND e.type = 'EXPENSE' AND e.date BETWEEN :startDate AND :endDate GROUP BY e.category.id")
+    List<Object[]> sumAmountByUserProfileGroupedByCategoryAndDateBetween(@Param("userProfile") UserProfile userProfile, @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
 }

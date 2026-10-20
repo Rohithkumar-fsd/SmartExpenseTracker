@@ -3,308 +3,530 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SmartSpend AI - Intelligent Multi-User Expense Tracker</title>
-  <meta name="description" content="Multi-user smart expense tracker with burn-rate alerts, Telegram Bot sync, and college group isolation.">
+  <title>SmartSpend • Modern Financial Velocity & Guardrail</title>
+  <meta name="description" content="Stripe & Mercury inspired intelligent expense tracker with burn-rate guardrails, Telegram Bot integration, and pre-purchase affordability engine.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 
-  <!-- Auth Modal Overlay (Login / Sign Up) -->
-  <div id="auth-modal" class="auth-overlay">
-    <div class="auth-card">
-      <div style="text-align: center; margin-bottom: 20px;">
-        <div style="font-size: 32px; margin-bottom: 4px;">⚡</div>
-        <h2 style="font-size: 1.4rem; font-weight: 800;">Welcome to SmartSpend</h2>
-        <p style="font-size: 0.85rem; color: var(--text-secondary);">College Edition • Personal & Group Finance</p>
+  <!-- Auth Modal Overlay (Sign In / Create Account) -->
+  <div id="auth-modal" class="modal-backdrop">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="brand-icon-box">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="5" width="20" height="14" rx="2"></rect>
+            <line x1="2" y1="10" x2="22" y2="10"></line>
+          </svg>
+        </div>
+        <h2 class="modal-title">Sign in to SmartSpend</h2>
+        <p class="modal-desc">Intelligent expense tracking & velocity guardrails</p>
       </div>
 
       <!-- Tabs: Sign In / Create Account -->
-      <div class="auth-tabs">
-        <button type="button" class="auth-tab-btn active" id="tab-login" onclick="switchAuthTab('login')">Sign In</button>
-        <button type="button" class="auth-tab-btn" id="tab-signup" onclick="switchAuthTab('signup')">Create Account</button>
+      <div class="tab-segment">
+        <button type="button" class="tab-btn active" id="tab-login" onclick="switchAuthTab('login')">Sign In</button>
+        <button type="button" class="tab-btn" id="tab-signup" onclick="switchAuthTab('signup')">Create Account</button>
       </div>
 
-      <div id="auth-error" class="auth-error"></div>
+      <div id="auth-error" class="alert-banner-error"></div>
 
       <!-- Login Form -->
       <form id="login-form" onsubmit="handleLoginSubmit(event)">
-        <div class="auth-field">
-          <label>Username or Email</label>
-          <input type="text" id="login-username" placeholder="e.g. rohit or demo" required>
+        <div class="form-group">
+          <label class="form-label">Username or Email</label>
+          <div class="input-group">
+            <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            <input type="text" id="login-username" class="form-input" placeholder="demo" required autocomplete="username">
+          </div>
         </div>
-        <div class="auth-field">
-          <label>Password</label>
-          <input type="password" id="login-password" placeholder="••••••••" required>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <div class="input-group">
+            <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+            <input type="password" id="login-password" class="form-input" placeholder="••••••••" required autocomplete="current-password">
+          </div>
         </div>
-        <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; margin-top: 10px;" id="login-btn">
-          Sign In
+        <button type="submit" class="btn btn-primary btn-block" id="login-btn">
+          <span>Sign In to Dashboard</span>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
         </button>
-        <div style="text-align: center; margin-top: 14px; font-size: 0.8rem; color: var(--text-muted);">
-          Demo Login: <code>demo</code> / <code>password123</code>
+        <div class="modal-footer-hint">
+          Demo Student Account: <code>demo</code> &bull; <code>password123</code>
         </div>
       </form>
 
       <!-- Signup Form -->
       <form id="signup-form" onsubmit="handleSignupSubmit(event)" style="display: none;">
-        <div class="auth-field">
-          <label>Full Name</label>
-          <input type="text" id="signup-name" placeholder="e.g. Rohit Kumar" required>
+        <div class="form-group">
+          <label class="form-label">Full Name</label>
+          <div class="input-group">
+            <input type="text" id="signup-name" class="form-input" placeholder="Rohit Kumar" required>
+          </div>
         </div>
-        <div class="auth-field">
-          <label>Username</label>
-          <input type="text" id="signup-username" placeholder="e.g. rohit22" required>
+        <div class="form-group">
+          <label class="form-label">Username</label>
+          <div class="input-group">
+            <input type="text" id="signup-username" class="form-input" placeholder="rohit" required autocomplete="username">
+          </div>
         </div>
-        <div class="auth-field">
-          <label>Email Address</label>
-          <input type="email" id="signup-email" placeholder="e.g. rohit@college.edu" required>
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <div class="input-group">
+            <input type="email" id="signup-email" class="form-input" placeholder="rohit@example.com" required autocomplete="email">
+          </div>
         </div>
-        <div class="auth-field">
-          <label>Password</label>
-          <input type="password" id="signup-password" placeholder="••••••••" required minlength="4">
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <div class="input-group">
+            <input type="password" id="signup-password" class="form-input" placeholder="Minimum 4 characters" required minlength="4" autocomplete="new-password">
+          </div>
         </div>
-        <div class="auth-field">
-          <label>Preferred Currency</label>
-          <select id="signup-currency">
-            <option value="₹">₹ INR (Indian Rupee)</option>
-            <option value="$">$ USD (US Dollar)</option>
-            <option value="€">€ EUR (Euro)</option>
-            <option value="£">£ GBP (British Pound)</option>
-          </select>
+        <div class="form-group">
+          <label class="form-label">Currency</label>
+          <div class="input-group">
+            <select id="signup-currency" class="form-select">
+              <option value="₹">₹ INR (Indian Rupee)</option>
+              <option value="$">$ USD (US Dollar)</option>
+              <option value="€">€ EUR (Euro)</option>
+              <option value="£">£ GBP (British Pound)</option>
+            </select>
+          </div>
         </div>
-        <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; margin-top: 10px;" id="signup-btn">
-          Create Account
+        <button type="submit" class="btn btn-primary btn-block" id="signup-btn">
+          <span>Create Account</span>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
         </button>
       </form>
-
     </div>
   </div>
 
-  <!-- Main App Shell -->
-  <div class="app-container">
-    
-    <!-- Top Header -->
-    <header class="app-header">
-      <div class="brand">
-        <div class="brand-icon">⚡</div>
-        <div class="brand-text">
-          <h1>SmartSpend AI</h1>
-          <p>Financial Velocity Guardrail</p>
-        </div>
-      </div>
-      <div class="header-actions">
-        <!-- Telegram Link Code Pill -->
-        <div class="telegram-link-badge" id="header-link-code-badge" title="Send this code to the Telegram Bot to link your phone!">
-          <span>🤖 Link Code:</span>
-          <strong id="header-link-code">------</strong>
-        </div>
-
-        <!-- User Profile Chip -->
-        <div class="user-chip" id="user-chip-container">
-          <div class="user-avatar" id="header-user-avatar">?</div>
-          <span class="user-name" id="header-user-name">Loading...</span>
-          <button class="btn-logout" onclick="handleLogout()" title="Log out">Logout</button>
-        </div>
-      </div>
-    </header>
-
-    <!-- KPI Metric Cards (Top Row) -->
-    <section class="kpi-grid">
-      <!-- KPI 1: Safe-to-Spend Today -->
-      <div class="glass-card kpi-card safe-today">
-        <div class="kpi-label">
-          <span>Safe-to-Spend Today</span>
-          <span>☀️</span>
-        </div>
-        <div class="kpi-value" id="kpi-safe-today">0.00</div>
-        <div class="kpi-subtext" id="kpi-safe-subtext">Daily allowance to stay on monthly target</div>
-      </div>
-
-      <!-- KPI 2: Total Spent This Month -->
-      <div class="glass-card kpi-card spent-month">
-        <div class="kpi-label">
-          <span>Spent This Month</span>
-          <span>💳</span>
-        </div>
-        <div class="kpi-value" id="kpi-spent-month">0.00</div>
-        <div class="kpi-subtext" id="kpi-budget-total">Budget: 0.00 (0% used)</div>
-      </div>
-
-      <!-- KPI 3: Daily Pace -->
-      <div class="glass-card kpi-card pace-stat">
-        <div class="kpi-label">
-          <span>Remaining Budget</span>
-          <span>🎯</span>
-        </div>
-        <div class="kpi-value" id="kpi-remaining">0.00</div>
-        <div class="kpi-subtext" id="kpi-days-left">Calculating days...</div>
-      </div>
-
-      <!-- KPI 4: Active Alerts -->
-      <div class="glass-card kpi-card alerts-stat">
-        <div class="kpi-label">
-          <span>Smart Warnings</span>
-          <span>🚨</span>
-        </div>
-        <div class="kpi-value" id="kpi-alerts-count">0</div>
-        <div class="kpi-subtext">Active velocity & budget warnings</div>
-      </div>
-    </section>
-
-    <!-- Main Grid: Simulator & Quick Add -->
-    <section class="dashboard-grid">
-      
-      <!-- Card A: "Can I Afford This?" Pre-Purchase Simulator -->
-      <div class="glass-card simulator-card">
-        <div class="section-badge">Unique Feature</div>
-        <h2 class="simulator-title">🤔 "Can I Afford This?" Pre-Purchase Check</h2>
-        <p class="simulator-desc">Test a purchase before spending. We calculate your remaining liquid allowance and bill impact.</p>
-        
-        <form id="afford-form" onsubmit="handleAffordCheck(event)">
-          <div class="sim-input-row">
-            <div class="sim-input-wrapper">
-              <span id="sim-currency-symbol">₹</span>
-              <input type="number" id="sim-amount" class="sim-input" placeholder="Amount (e.g. 500)" step="0.01" required>
-            </div>
-            <input type="text" id="sim-item" class="sim-input sim-input-item" placeholder="What is it? (e.g. Headphones, Shoes)" required>
-            <button type="submit" class="btn-primary" id="sim-btn">
-              <span>Simulate</span>
-            </button>
+  <!-- In-Page Category Budget Management Modal -->
+  <div id="budget-modal" class="modal-backdrop">
+    <div class="modal-card" style="max-width: 440px;">
+      <div class="modal-header" style="text-align: left; margin-bottom: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+          <div>
+            <h2 class="modal-title" style="font-size: 1.2rem;">Configure Category Budget</h2>
+            <p class="modal-desc">Set monthly threshold to trigger pace warnings</p>
           </div>
-        </form>
-
-        <!-- Dynamic Verdict Result Box -->
-        <div id="sim-result" class="sim-result-box">
-          <span id="sim-badge" class="sim-verdict-badge verdict-SAFE">SAFE</span>
-          <div id="sim-headline" class="sim-result-headline">Safe to buy!</div>
-          <div id="sim-details" class="sim-result-details">Your remaining daily allowance remains healthy.</div>
-          <div class="sim-allowance-comparison">
-            <div class="sim-stat-col">
-              <small>Current Daily Allowance</small>
-              <strong id="sim-current-daily">0.00/day</strong>
-            </div>
-            <div class="sim-stat-col">
-              <small>New Daily Allowance If Bought</small>
-              <strong id="sim-new-daily" style="color: #38bdf8;">0.00/day</strong>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Card B: Quick Natural Language Expense Logger -->
-      <div class="glass-card quick-add-card">
-        <h2 class="simulator-title">⚡ Quick Log Expense</h2>
-        <p class="simulator-desc">Type in plain English. Auto-categorizes instantly.</p>
-        
-        <form id="quick-add-form" onsubmit="handleQuickAdd(event)">
-          <div class="nlp-input-group">
-            <input type="text" id="nlp-text" class="nlp-input" placeholder="e.g. Canteen lunch 120 or Metro 40" required>
-            <button type="submit" class="btn-primary" id="log-btn">Log</button>
-          </div>
-          <div class="nlp-hints">
-            Try: <code>Tea 20</code>, <code>Hostel groceries 350</code>, <code>Movie 250</code>, or <code>Petrol 100</code>
-          </div>
-        </form>
-
-        <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center;">
-          <span style="font-size: 0.82rem; color: var(--text-secondary);">Set Category Budget</span>
-          <button onclick="openBudgetModal()" style="background: rgba(255,255,255,0.06); border: 1px solid var(--border-subtle); color: #fff; padding: 6px 14px; border-radius: 6px; font-size: 0.8rem; cursor: pointer;">
-            + Edit Budgets
+          <button type="button" class="btn-close" onclick="closeBudgetModal()" title="Close">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
           </button>
         </div>
       </div>
+      
+      <form id="set-budget-form" onsubmit="handleSaveBudget(event)">
+        <div class="form-group">
+          <label class="form-label">Category</label>
+          <div class="input-group">
+            <select id="modal-budget-category" class="form-select" required>
+              <option value="Food & Dining">Food & Dining</option>
+              <option value="Transport">Transport</option>
+              <option value="Shopping">Shopping</option>
+              <option value="Entertainment">Entertainment</option>
+              <option value="Bills & Utilities">Bills & Utilities</option>
+              <option value="Healthcare">Healthcare</option>
+              <option value="Other">Other / General</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Monthly Spending Limit (<span id="modal-budget-currency">₹</span>)</label>
+          <div class="input-group">
+            <span class="currency-prefix" id="modal-currency-sym">₹</span>
+            <input type="number" id="modal-budget-amount" class="form-input" placeholder="3500" step="10" min="0" required style="padding-left: 32px;">
+          </div>
+        </div>
+
+        <!-- Quick Presets -->
+        <div class="presets-container">
+          <span class="presets-label">Quick Presets:</span>
+          <button type="button" class="chip-preset" onclick="setPresetLimit(1000)">₹1,000</button>
+          <button type="button" class="chip-preset" onclick="setPresetLimit(2500)">₹2,500</button>
+          <button type="button" class="chip-preset" onclick="setPresetLimit(5000)">₹5,000</button>
+          <button type="button" class="chip-preset" onclick="setPresetLimit(10000)">₹10,000</button>
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-top: 24px;">
+          <button type="button" class="btn btn-secondary" onclick="closeBudgetModal()" style="flex: 1; justify-content: center;">Cancel</button>
+          <button type="submit" class="btn btn-primary" style="flex: 2; justify-content: center;" id="modal-save-btn">
+            <span>Save Category Budget</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Main SaaS Top Navigation Bar (Stripe & Mercury style) -->
+  <header class="navbar-saas">
+    <div class="navbar-inner">
+      <div class="nav-left">
+        <div class="brand-wrap">
+          <div class="brand-symbol">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline>
+              <polyline points="16 7 22 7 22 13"></polyline>
+            </svg>
+          </div>
+          <span class="brand-name">SmartSpend</span>
+          <span class="brand-plan-badge">Mercury SaaS</span>
+        </div>
+      </div>
+
+      <div class="nav-right">
+        <!-- Live Telegram Capsule -->
+        <div class="telegram-sync-capsule" id="header-link-code-badge" onclick="copyTelegramLinkCode()" title="Click to copy your Telegram bot link code">
+          <div class="capsule-dot"></div>
+          <span class="capsule-text">Telegram Sync:</span>
+          <code class="capsule-code" id="header-link-code">------</code>
+          <span class="capsule-copy-tag" id="copy-hint-pill">Copy Code</span>
+        </div>
+
+        <!-- User Profile Pill -->
+        <div class="user-profile-widget" id="user-chip-container">
+          <div class="user-avatar-initial" id="header-user-avatar">?</div>
+          <span class="user-name-label" id="header-user-name">Loading...</span>
+          <button class="btn-signout" onclick="handleLogout()" title="Sign Out">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Page Workspace -->
+  <div class="page-container">
+    
+    <!-- Page Header & Active Cycle Meta -->
+    <div class="page-header">
+      <div class="page-header-titles">
+        <h1 class="page-title">Financial Velocity & Budget Overview</h1>
+        <p class="page-subtitle">Real-time spend pacing, pre-purchase simulation, and guardrail tracking</p>
+      </div>
+      <div class="cycle-pill">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 14"></polyline></svg>
+        <span id="kpi-days-badge">Active Billing Cycle</span>
+      </div>
+    </div>
+
+    <!-- 4 Key Stat Cards (Stripe / Mercury style) -->
+    <section class="stat-cards-grid">
+      
+      <!-- Card 1: Safe-to-Spend Today -->
+      <div class="stat-card">
+        <div class="stat-card-header">
+          <span class="stat-label">Daily Safe Allowance</span>
+          <div class="stat-icon-wrapper stat-icon-emerald">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+          </div>
+        </div>
+        <div class="stat-value-group">
+          <div class="stat-main-number text-emerald" id="kpi-safe-today">₹0.00</div>
+          <span class="stat-unit">/ day</span>
+        </div>
+        <div class="stat-footer-bar">
+          <div class="saas-progress-track">
+            <div class="saas-progress-fill bg-emerald" id="kpi-allowance-fill" style="width: 75%;"></div>
+          </div>
+          <span class="stat-subtext" id="kpi-safe-subtext">Safe allowance to hit monthly target</span>
+        </div>
+      </div>
+
+      <!-- Card 2: Spent This Month -->
+      <div class="stat-card">
+        <div class="stat-card-header">
+          <span class="stat-label">Spent This Month</span>
+          <div class="stat-icon-wrapper stat-icon-indigo">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+          </div>
+        </div>
+        <div class="stat-value-group">
+          <div class="stat-main-number" id="kpi-spent-month">₹0.00</div>
+        </div>
+        <div class="stat-footer-bar">
+          <div class="saas-progress-track">
+            <div class="saas-progress-fill bg-indigo" id="kpi-spent-fill" style="width: 25%;"></div>
+          </div>
+          <span class="stat-subtext" id="kpi-budget-total">Budget: ₹0.00 (0% used)</span>
+        </div>
+      </div>
+
+      <!-- Card 3: Remaining Liquid Budget -->
+      <div class="stat-card">
+        <div class="stat-card-header">
+          <span class="stat-label">Liquid Remaining</span>
+          <div class="stat-icon-wrapper stat-icon-cyan">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+          </div>
+        </div>
+        <div class="stat-value-group">
+          <div class="stat-main-number text-slate-800" id="kpi-remaining">₹0.00</div>
+        </div>
+        <div class="stat-footer-bar">
+          <div class="stat-meta-split">
+            <span class="stat-subtext" id="kpi-days-left">Calculating days...</span>
+            <span class="badge-status-neutral">Month-End Target</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 4: Burn Guardrail Status -->
+      <div class="stat-card">
+        <div class="stat-card-header">
+          <span class="stat-label">Guardrail Velocity</span>
+          <div class="stat-icon-wrapper stat-icon-amber">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+          </div>
+        </div>
+        <div class="stat-value-group">
+          <div class="stat-main-number" id="kpi-alerts-count">0</div>
+          <span class="stat-unit">alerts</span>
+        </div>
+        <div class="stat-footer-bar">
+          <div class="stat-meta-split">
+            <span class="stat-subtext" id="kpi-alert-status-text">Burn rate pace</span>
+            <div class="velocity-pill normal" id="velocity-status-chip">
+              <span class="velocity-pill-dot"></span>
+              <span id="velocity-status-label">Normal Velocity</span>
+            </div>
+          </div>
+        </div>
+      </div>
 
     </section>
 
-    <!-- Secondary Row: Charts & Category Velocity Bars -->
-    <section class="secondary-grid">
+    <!-- Two-Column Main Tools Grid -->
+    <div class="saas-split-grid">
       
-      <!-- Category Budget Velocity Bars -->
-      <div class="glass-card budget-velocity-card">
-        <div class="card-header-row">
-          <h2 class="card-title">🏎️ Category Burn-Rate & Budgets</h2>
-          <span style="font-size: 0.8rem; color: var(--text-muted);">Current Month</span>
+      <!-- Left Column: Pre-Purchase Simulator & Quick Log -->
+      <div class="saas-col">
+        
+        <!-- Panel 1: Pre-Purchase Affordability Simulator -->
+        <div class="card-saas">
+          <div class="card-saas-header">
+            <div>
+              <h2 class="card-saas-title">Pre-Purchase Affordability Check</h2>
+              <p class="card-saas-desc">Simulate immediate impact on your remaining daily allowance before buying</p>
+            </div>
+            <span class="saas-badge-pill">Calculator</span>
+          </div>
+
+          <!-- Scenario Preset Buttons -->
+          <div class="scenario-chips-row">
+            <span class="scenario-chips-label">Quick Scenarios:</span>
+            <button type="button" class="scenario-chip" onclick="fillSimulator('Coffee', 40)">Coffee (₹40)</button>
+            <button type="button" class="scenario-chip" onclick="fillSimulator('Lunch', 120)">Lunch (₹120)</button>
+            <button type="button" class="scenario-chip" onclick="fillSimulator('Movie Ticket', 300)">Movie (₹300)</button>
+            <button type="button" class="scenario-chip" onclick="fillSimulator('Headphones', 2500)">Headphones (₹2,500)</button>
+            <button type="button" class="scenario-chip" onclick="fillSimulator('Sneakers', 4500)">Sneakers (₹4,500)</button>
+          </div>
+
+          <form id="afford-form" onsubmit="handleAffordCheck(event)">
+            <div class="sim-row-grid">
+              <div class="input-group" style="width: 140px; flex-shrink: 0;">
+                <span class="currency-prefix" id="sim-currency-symbol">₹</span>
+                <input type="number" id="sim-amount" class="form-input" placeholder="Amount" step="0.01" min="1" required style="padding-left: 32px;">
+              </div>
+              <div class="input-group" style="flex: 1;">
+                <input type="text" id="sim-item" class="form-input" placeholder="Item name (e.g. Wireless Mouse)" required>
+              </div>
+              <button type="submit" class="btn btn-primary" id="sim-btn" style="flex-shrink: 0;">
+                <span>Simulate</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+              </button>
+            </div>
+          </form>
+
+          <!-- Dynamic Result Box -->
+          <div id="sim-result" class="verdict-banner-box">
+            <div class="verdict-header">
+              <span id="sim-badge" class="verdict-tag verdict-SAFE">SAFE TO BUY</span>
+              <span class="verdict-confidence" id="sim-verdict-sub">High Confidence</span>
+            </div>
+            <div id="sim-headline" class="verdict-title">Safe to buy</div>
+            <div id="sim-details" class="verdict-body">Your remaining daily allowance remains within planned bounds.</div>
+            
+            <div class="delta-comparison-card">
+              <div class="delta-box">
+                <span class="delta-caption">Current Daily Allowance</span>
+                <strong class="delta-number" id="sim-current-daily">₹0.00/day</strong>
+              </div>
+              <div class="delta-divider-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+              </div>
+              <div class="delta-box">
+                <span class="delta-caption">New Daily Allowance If Bought</span>
+                <strong class="delta-number text-indigo" id="sim-new-daily">₹0.00/day</strong>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="category-budget-list" id="category-budget-container">
-          <!-- Dynamic category bars injected by JS -->
+
+        <!-- Panel 2: Natural Language Quick Entry -->
+        <div class="card-saas">
+          <div class="card-saas-header">
+            <div>
+              <h2 class="card-saas-title">Quick Transaction Entry</h2>
+              <p class="card-saas-desc">Log expenses or income using plain conversational text</p>
+            </div>
+          </div>
+
+          <form id="quick-add-form" onsubmit="handleQuickAdd(event)">
+            <div class="nlp-input-row">
+              <div class="input-group" style="flex: 1;">
+                <input type="text" id="nlp-text" class="form-input" placeholder="e.g. Canteen lunch 120, Auto 60, or Salary 5000" required>
+              </div>
+              <button type="submit" class="btn btn-primary" id="log-btn" style="flex-shrink: 0;">
+                <span>Record</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+              </button>
+            </div>
+
+            <!-- Example Clickable Pills -->
+            <div class="nlp-examples-row">
+              <span class="nlp-examples-label">Try:</span>
+              <button type="button" class="nlp-example-tag" onclick="fillQuickAdd('Coffee 30')">Coffee 30</button>
+              <button type="button" class="nlp-example-tag" onclick="fillQuickAdd('Auto 60')">Auto 60</button>
+              <button type="button" class="nlp-example-tag" onclick="fillQuickAdd('Groceries 350')">Groceries 350</button>
+              <button type="button" class="nlp-example-tag" onclick="fillQuickAdd('add 5000 to my budget as salary')">Salary 5000</button>
+            </div>
+          </form>
+
+          <div class="card-footer-strip">
+            <div class="footer-meta-text">
+              <strong>Category Budget Guardrails</strong>
+              <span>Adjust spending caps per category anytime</span>
+            </div>
+            <button type="button" onclick="openBudgetModal()" class="btn btn-secondary btn-sm">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+              <span>Edit Budgets</span>
+            </button>
+          </div>
         </div>
+
       </div>
 
-      <!-- Donut Chart: Spending Distribution -->
-      <div class="glass-card chart-card">
-        <div class="card-header-row">
-          <h2 class="card-title">📊 Spending Distribution</h2>
-          <span style="font-size: 0.8rem; color: var(--text-muted);">By Category</span>
+      <!-- Right Column: Category Budgets & Donut Distribution -->
+      <div class="saas-col">
+        
+        <!-- Panel 3: Category Budgets List -->
+        <div class="card-saas">
+          <div class="card-saas-header">
+            <div>
+              <h2 class="card-saas-title">Category Spending Caps</h2>
+              <p class="card-saas-desc">Real-time consumption against defined monthly budgets</p>
+            </div>
+            <button type="button" onclick="openBudgetModal()" class="btn-text-link">+ Adjust Limit</button>
+          </div>
+          <div class="category-list-box" id="category-budget-container">
+            <!-- Injected dynamically via JS -->
+          </div>
         </div>
-        <div class="chart-container">
-          <canvas id="categoryDonutChart"></canvas>
+
+        <!-- Panel 4: Spend Distribution Donut Chart -->
+        <div class="card-saas">
+          <div class="card-saas-header">
+            <div>
+              <h2 class="card-saas-title">Spend Distribution</h2>
+              <p class="card-saas-desc">Proportional expense allocation by category</p>
+            </div>
+          </div>
+          <div class="chart-wrapper">
+            <canvas id="categoryDonutChart"></canvas>
+          </div>
         </div>
+
       </div>
 
-    </section>
+    </div>
 
-    <!-- Smart Alerts Feed & Recent Transactions -->
-    <section class="secondary-grid">
+    <!-- Bottom Row: Alerts Feed & Transaction Ledger -->
+    <div class="saas-split-grid" style="margin-top: 24px;">
       
-      <!-- Smart Alerts Feed -->
-      <div class="glass-card alerts-card">
-        <div class="card-header-row">
-          <h2 class="card-title">🚨 Smart Warning Stream</h2>
-          <span style="font-size: 0.8rem; color: var(--text-muted);" id="alert-feed-subtitle">Live Alerts</span>
+      <!-- Panel 5: Guardrail Warning Stream -->
+      <div class="card-saas">
+        <div class="card-saas-header">
+          <div>
+            <h2 class="card-saas-title">Guardrail Alerts</h2>
+            <p class="card-saas-desc" id="alert-feed-subtitle">Active velocity warnings and threshold breaches</p>
+          </div>
         </div>
-        <div class="alerts-list" id="alerts-container">
-          <!-- Injected by JS -->
+        <div class="alerts-feed-box" id="alerts-container">
+          <!-- Injected dynamically via JS -->
         </div>
       </div>
 
-      <!-- Recent Transactions Table -->
-      <div class="glass-card table-card" style="margin-bottom: 0;">
-        <div class="card-header-row">
-          <h2 class="card-title">🧾 Recent Activity</h2>
-          <span style="font-size: 0.8rem; color: var(--text-muted);">Real-time Sync</span>
+      <!-- Panel 6: Transaction Ledger with Filter Tabs -->
+      <div class="card-saas">
+        <div class="card-saas-header" style="flex-wrap: wrap; gap: 12px;">
+          <div>
+            <h2 class="card-saas-title">Transaction Ledger</h2>
+            <p class="card-saas-desc">Synchronized in real-time with Telegram Bot</p>
+          </div>
+          <!-- Clean Segmented Filter Pills -->
+          <div class="filter-segment">
+            <button type="button" class="filter-btn active" onclick="filterTransactions('ALL', this)">All</button>
+            <button type="button" class="filter-btn" onclick="filterTransactions('EXPENSE', this)">Expenses</button>
+            <button type="button" class="filter-btn" onclick="filterTransactions('INCOME', this)">Income</button>
+            <button type="button" class="filter-btn" onclick="filterTransactions('TELEGRAM', this)">Telegram</button>
+          </div>
         </div>
-        <div class="tx-table-wrapper">
-          <table class="tx-table">
+
+        <div class="saas-table-wrapper">
+          <table class="saas-table">
             <thead>
               <tr>
-                <th>Item / Note</th>
+                <th>Description</th>
                 <th>Category</th>
-                <th>Source</th>
+                <th>Channel</th>
                 <th>Amount</th>
-                <th></th>
+                <th style="width: 36px;"></th>
               </tr>
             </thead>
             <tbody id="tx-table-body">
-              <!-- Injected by JS -->
+              <!-- Injected dynamically via JS -->
             </tbody>
           </table>
         </div>
       </div>
 
-    </section>
+    </div>
 
-    <!-- Telegram Bot Instructions Banner -->
-    <section class="glass-card bot-setup-banner" style="margin-top: 28px;">
-      <div class="bot-banner-left">
-        <div class="bot-banner-icon">🤖</div>
-        <div class="bot-banner-text">
-          <h3>Connect Your Phone via Telegram</h3>
-          <p>Send <code id="banner-link-command">/link ------</code> to your bot to link your account. Text expenses anytime from WhatsApp/Telegram speed!</p>
+    <!-- Banner: Telegram Bot Integration Card -->
+    <div class="telegram-banner-saas">
+      <div class="telegram-banner-left">
+        <div class="telegram-icon-container">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+        </div>
+        <div class="telegram-banner-info">
+          <div class="banner-tag">MOBILE COMPANION</div>
+          <h3 class="banner-heading">Connect Telegram for Instant On-The-Go Logging</h3>
+          <p class="banner-subtext">Send quick texts like <code>Coffee 30</code>, <code>Auto 60</code>, or <code>/today</code> directly to your bot.</p>
         </div>
       </div>
-      <div>
-        <a href="https://t.me" target="_blank" class="btn-primary" id="btn-open-telegram" style="text-decoration: none;">
-          Open in Telegram ↗
+      <div class="telegram-banner-right">
+        <button type="button" class="btn-copy-link-saas" onclick="copyTelegramLinkCode()">
+          <span>Copy <code id="banner-link-command">/link ------</code></span>
+        </button>
+        <a href="https://t.me" target="_blank" class="btn btn-primary" id="btn-open-telegram" style="text-decoration: none;">
+          <span>Open Bot</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
         </a>
       </div>
-    </section>
+    </div>
 
   </div>
 
   <!-- Toast Notification Container -->
   <div id="toast-container"></div>
 
-  <!-- App Logic -->
+  <!-- Application Logic -->
   <script src="js/app.js"></script>
 </body>
 </html>
