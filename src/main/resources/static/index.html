@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SmartSpend AI - Intelligent Multi-User Expense Tracker</title>
+  <meta name="description" content="Multi-user smart expense tracker with burn-rate alerts, Telegram Bot sync, and college group isolation.">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+  <!-- Auth Modal Overlay (Login / Sign Up) -->
+  <div id="auth-modal" class="auth-overlay">
+    <div class="auth-card">
+      <div style="text-align: center; margin-bottom: 20px;">
+        <div style="font-size: 32px; margin-bottom: 4px;">⚡</div>
+        <h2 style="font-size: 1.4rem; font-weight: 800;">Welcome to SmartSpend</h2>
+        <p style="font-size: 0.85rem; color: var(--text-secondary);">College Edition • Personal & Group Finance</p>
+      </div>
+
+      <!-- Tabs: Sign In / Create Account -->
+      <div class="auth-tabs">
+        <button type="button" class="auth-tab-btn active" id="tab-login" onclick="switchAuthTab('login')">Sign In</button>
+        <button type="button" class="auth-tab-btn" id="tab-signup" onclick="switchAuthTab('signup')">Create Account</button>
+      </div>
+
+      <div id="auth-error" class="auth-error"></div>
+
+      <!-- Login Form -->
+      <form id="login-form" onsubmit="handleLoginSubmit(event)">
+        <div class="auth-field">
+          <label>Username or Email</label>
+          <input type="text" id="login-username" placeholder="e.g. rohit or demo" required>
+        </div>
+        <div class="auth-field">
+          <label>Password</label>
+          <input type="password" id="login-password" placeholder="••••••••" required>
+        </div>
+        <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; margin-top: 10px;" id="login-btn">
+          Sign In
+        </button>
+        <div style="text-align: center; margin-top: 14px; font-size: 0.8rem; color: var(--text-muted);">
+          Demo Login: <code>demo</code> / <code>password123</code>
+        </div>
+      </form>
+
+      <!-- Signup Form -->
+      <form id="signup-form" onsubmit="handleSignupSubmit(event)" style="display: none;">
+        <div class="auth-field">
+          <label>Full Name</label>
+          <input type="text" id="signup-name" placeholder="e.g. Rohit Kumar" required>
+        </div>
+        <div class="auth-field">
+          <label>Username</label>
+          <input type="text" id="signup-username" placeholder="e.g. rohit22" required>
+        </div>
+        <div class="auth-field">
+          <label>Email Address</label>
+          <input type="email" id="signup-email" placeholder="e.g. rohit@college.edu" required>
+        </div>
+        <div class="auth-field">
+          <label>Password</label>
+          <input type="password" id="signup-password" placeholder="••••••••" required minlength="4">
+        </div>
+        <div class="auth-field">
+          <label>Preferred Currency</label>
+          <select id="signup-currency">
+            <option value="₹">₹ INR (Indian Rupee)</option>
+            <option value="$">$ USD (US Dollar)</option>
+            <option value="€">€ EUR (Euro)</option>
+            <option value="£">£ GBP (British Pound)</option>
+          </select>
+        </div>
+        <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; margin-top: 10px;" id="signup-btn">
+          Create Account
+        </button>
+      </form>
+
+    </div>
+  </div>
+
+  <!-- Main App Shell -->
+  <div class="app-container">
+    
+    <!-- Top Header -->
+    <header class="app-header">
+      <div class="brand">
+        <div class="brand-icon">⚡</div>
+        <div class="brand-text">
+          <h1>SmartSpend AI</h1>
+          <p>Financial Velocity Guardrail</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <!-- Telegram Link Code Pill -->
+        <div class="telegram-link-badge" id="header-link-code-badge" title="Send this code to the Telegram Bot to link your phone!">
+          <span>🤖 Link Code:</span>
+          <strong id="header-link-code">------</strong>
+        </div>
+
+        <!-- User Profile Chip -->
+        <div class="user-chip" id="user-chip-container">
+          <div class="user-avatar" id="header-user-avatar">?</div>
+          <span class="user-name" id="header-user-name">Loading...</span>
+          <button class="btn-logout" onclick="handleLogout()" title="Log out">Logout</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- KPI Metric Cards (Top Row) -->
+    <section class="kpi-grid">
+      <!-- KPI 1: Safe-to-Spend Today -->
+      <div class="glass-card kpi-card safe-today">
+        <div class="kpi-label">
+          <span>Safe-to-Spend Today</span>
+          <span>☀️</span>
+        </div>
+        <div class="kpi-value" id="kpi-safe-today">0.00</div>
+        <div class="kpi-subtext" id="kpi-safe-subtext">Daily allowance to stay on monthly target</div>
+      </div>
+
+      <!-- KPI 2: Total Spent This Month -->
+      <div class="glass-card kpi-card spent-month">
+        <div class="kpi-label">
+          <span>Spent This Month</span>
+          <span>💳</span>
+        </div>
+        <div class="kpi-value" id="kpi-spent-month">0.00</div>
+        <div class="kpi-subtext" id="kpi-budget-total">Budget: 0.00 (0% used)</div>
+      </div>
+
+      <!-- KPI 3: Daily Pace -->
+      <div class="glass-card kpi-card pace-stat">
+        <div class="kpi-label">
+          <span>Remaining Budget</span>
+          <span>🎯</span>
+        </div>
+        <div class="kpi-value" id="kpi-remaining">0.00</div>
+        <div class="kpi-subtext" id="kpi-days-left">Calculating days...</div>
+      </div>
+
+      <!-- KPI 4: Active Alerts -->
+      <div class="glass-card kpi-card alerts-stat">
+        <div class="kpi-label">
+          <span>Smart Warnings</span>
+          <span>🚨</span>
+        </div>
+        <div class="kpi-value" id="kpi-alerts-count">0</div>
+        <div class="kpi-subtext">Active velocity & budget warnings</div>
+      </div>
+    </section>
+
+    <!-- Main Grid: Simulator & Quick Add -->
+    <section class="dashboard-grid">
+      
+      <!-- Card A: "Can I Afford This?" Pre-Purchase Simulator -->
+      <div class="glass-card simulator-card">
+        <div class="section-badge">Unique Feature</div>
+        <h2 class="simulator-title">🤔 "Can I Afford This?" Pre-Purchase Check</h2>
+        <p class="simulator-desc">Test a purchase before spending. We calculate your remaining liquid allowance and bill impact.</p>
+        
+        <form id="afford-form" onsubmit="handleAffordCheck(event)">
+          <div class="sim-input-row">
+            <div class="sim-input-wrapper">
+              <span id="sim-currency-symbol">₹</span>
+              <input type="number" id="sim-amount" class="sim-input" placeholder="Amount (e.g. 500)" step="0.01" required>
+            </div>
+            <input type="text" id="sim-item" class="sim-input sim-input-item" placeholder="What is it? (e.g. Headphones, Shoes)" required>
+            <button type="submit" class="btn-primary" id="sim-btn">
+              <span>Simulate</span>
+            </button>
+          </div>
+        </form>
+
+        <!-- Dynamic Verdict Result Box -->
+        <div id="sim-result" class="sim-result-box">
+          <span id="sim-badge" class="sim-verdict-badge verdict-SAFE">SAFE</span>
+          <div id="sim-headline" class="sim-result-headline">Safe to buy!</div>
+          <div id="sim-details" class="sim-result-details">Your remaining daily allowance remains healthy.</div>
+          <div class="sim-allowance-comparison">
+            <div class="sim-stat-col">
+              <small>Current Daily Allowance</small>
+              <strong id="sim-current-daily">0.00/day</strong>
+            </div>
+            <div class="sim-stat-col">
+              <small>New Daily Allowance If Bought</small>
+              <strong id="sim-new-daily" style="color: #38bdf8;">0.00/day</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card B: Quick Natural Language Expense Logger -->
+      <div class="glass-card quick-add-card">
+        <h2 class="simulator-title">⚡ Quick Log Expense</h2>
+        <p class="simulator-desc">Type in plain English. Auto-categorizes instantly.</p>
+        
+        <form id="quick-add-form" onsubmit="handleQuickAdd(event)">
+          <div class="nlp-input-group">
+            <input type="text" id="nlp-text" class="nlp-input" placeholder="e.g. Canteen lunch 120 or Metro 40" required>
+            <button type="submit" class="btn-primary" id="log-btn">Log</button>
+          </div>
+          <div class="nlp-hints">
+            Try: <code>Tea 20</code>, <code>Hostel groceries 350</code>, <code>Movie 250</code>, or <code>Petrol 100</code>
+          </div>
+        </form>
+
+        <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center;">
+          <span style="font-size: 0.82rem; color: var(--text-secondary);">Set Category Budget</span>
+          <button onclick="openBudgetModal()" style="background: rgba(255,255,255,0.06); border: 1px solid var(--border-subtle); color: #fff; padding: 6px 14px; border-radius: 6px; font-size: 0.8rem; cursor: pointer;">
+            + Edit Budgets
+          </button>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- Secondary Row: Charts & Category Velocity Bars -->
+    <section class="secondary-grid">
+      
+      <!-- Category Budget Velocity Bars -->
+      <div class="glass-card budget-velocity-card">
+        <div class="card-header-row">
+          <h2 class="card-title">🏎️ Category Burn-Rate & Budgets</h2>
+          <span style="font-size: 0.8rem; color: var(--text-muted);">Current Month</span>
+        </div>
+        <div class="category-budget-list" id="category-budget-container">
+          <!-- Dynamic category bars injected by JS -->
+        </div>
+      </div>
+
+      <!-- Donut Chart: Spending Distribution -->
+      <div class="glass-card chart-card">
+        <div class="card-header-row">
+          <h2 class="card-title">📊 Spending Distribution</h2>
+          <span style="font-size: 0.8rem; color: var(--text-muted);">By Category</span>
+        </div>
+        <div class="chart-container">
+          <canvas id="categoryDonutChart"></canvas>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- Smart Alerts Feed & Recent Transactions -->
+    <section class="secondary-grid">
+      
+      <!-- Smart Alerts Feed -->
+      <div class="glass-card alerts-card">
+        <div class="card-header-row">
+          <h2 class="card-title">🚨 Smart Warning Stream</h2>
+          <span style="font-size: 0.8rem; color: var(--text-muted);" id="alert-feed-subtitle">Live Alerts</span>
+        </div>
+        <div class="alerts-list" id="alerts-container">
+          <!-- Injected by JS -->
+        </div>
+      </div>
+
+      <!-- Recent Transactions Table -->
+      <div class="glass-card table-card" style="margin-bottom: 0;">
+        <div class="card-header-row">
+          <h2 class="card-title">🧾 Recent Activity</h2>
+          <span style="font-size: 0.8rem; color: var(--text-muted);">Real-time Sync</span>
+        </div>
+        <div class="tx-table-wrapper">
+          <table class="tx-table">
+            <thead>
+              <tr>
+                <th>Item / Note</th>
+                <th>Category</th>
+                <th>Source</th>
+                <th>Amount</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="tx-table-body">
+              <!-- Injected by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- Telegram Bot Instructions Banner -->
+    <section class="glass-card bot-setup-banner" style="margin-top: 28px;">
+      <div class="bot-banner-left">
+        <div class="bot-banner-icon">🤖</div>
+        <div class="bot-banner-text">
+          <h3>Connect Your Phone via Telegram</h3>
+          <p>Send <code id="banner-link-command">/link ------</code> to your bot to link your account. Text expenses anytime from WhatsApp/Telegram speed!</p>
+        </div>
+      </div>
+      <div>
+        <a href="https://t.me" target="_blank" class="btn-primary" id="btn-open-telegram" style="text-decoration: none;">
+          Open in Telegram ↗
+        </a>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container"></div>
+
+  <!-- App Logic -->
+  <script src="js/app.js"></script>
+</body>
+</html>
